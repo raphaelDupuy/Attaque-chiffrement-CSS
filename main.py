@@ -42,5 +42,7 @@ class LFSR:
 
 test_lfsr = LFSR(vecteur_init=[1,0,0,1,0,1,1,0], coefs_retr=[0,0,0,1,1,1,0,0])
 
-for i in test_lfsr.sequence(8):
-    print(i)
+
+if __name__ == "__main__":
+    for i in test_lfsr.sequence(8):
+        print(i)
