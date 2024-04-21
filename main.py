@@ -1,8 +1,18 @@
 class LFSR:
+    """Classe représentant un LFSR
 
-    def __init__(self, vecteur_init:list, coefs_retr:list):
+    Attributs:
+    ---------
+    vecteur_init (list[{0,1}]): Vecteur d'initialisation du LFSR
+    coefs_retr (list[{0,1}]): Vecteur contenant les coefficients de rétroaction du LFSR
+    """
 
-        self.etat_initial = vecteur_init
+    def __init__(self, vecteur_init:list, coefs_retr:list) -> None:
+        """Fonction d'initialisation de la classe LFSR"""
+
+        if len(vecteur_init) != len(coefs_retr):
+            raise IndexError("Tailles du VI et des coefficients de rétroaction incompatibles")
+        
         self.coefs = coefs_retr
         self.etat = vecteur_init
 
@@ -37,12 +47,7 @@ class LFSR:
             test_list.insert(0, last)
             self.set_etat(test_list)
 
-    def reset(self):
-        self.set_etat(self.etat_initial)
-
 test_lfsr = LFSR(vecteur_init=[1,0,0,1,0,1,1,0], coefs_retr=[0,0,0,1,1,1,0,0])
 
-
 if __name__ == "__main__":
-    for i in test_lfsr.sequence(8):
-        print(i)
+    print(f"{[i for i in test_lfsr.sequence(16)]}")
