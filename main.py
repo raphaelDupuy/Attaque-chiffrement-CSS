@@ -35,6 +35,7 @@ class LFSR:
         return len(self.get_etat())
 
     def sequence(self, taille_seq):
+        """Fonction génératrice de la séquence sortie par le LFSR pour une taille donnée"""
 
         for _ in range(taille_seq):
             last = self.get_etat()[-1]
