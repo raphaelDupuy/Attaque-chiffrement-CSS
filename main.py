@@ -41,7 +41,7 @@ class LFSR:
             last = self.get_etat()[-1]
             yield last
 
-            last += sum([self.get_coefs(i) * self.get_etat(i) for i in range(self.get_taille())])
+            last = sum([self.get_coefs(i) * self.get_etat(i) for i in range(self.get_taille())])
             last = last % 2
 
             new_list = self.get_etat()[:-1]
@@ -55,52 +55,47 @@ class CSS:
         
         s1, s2 = str("".join(str(i) for i in s[0:16])), str("".join(str(i) for i in s[16:40]))
         
-        vec_17 = [(1 if i in {14, 0} else 0) for i in range(17)]
-        vec_25 = [(1 if i in {12, 4, 3, 0} else 0) for i in range(25)]
+        vec_17 = [(1 if i in {14, 0} else 0) for i in range(17)][::-1]
+        vec_25 = [(1 if i in {12, 4, 3, 0} else 0) for i in range(25)][::-1]
         self.lfrs_17 = LFSR([int(i) for i in ("1" + s1)], vec_17)
         self.lfrs_25 = LFSR([int(i) for i in ("1" + s2)], vec_25)
 
     def octet(self):
-        x, y = int(''.join(map(str, [i for i in self.lfrs_17.sequence(8)])), 2), int(''.join(map(str, [i for i in self.lfrs_25.sequence(8)])), 2)
-        return x + y
-    
+        x, y = "", ""
+        for i in [i for i in self.lfrs_17.sequence(8)][::-1]:
+            x += str(i)
+        for j in [i for i in self.lfrs_25.sequence(8)][::-1]:
+            y += str(j)
+        print(f"x: {x} - {int(x, 2)}, y: {y} - {int(y, 2)}")
+        return int(x, 2) + int(y, 2)
+
     def encryptage(self, m):
         res = ""
         c = 0
-        taille = len(m[2:])
+        taille = len(m)
         impair = taille % 2
-        for i in range(2, taille + 1, 2):
-            print(f"res: {res}")
-            print(f"bits: {m[i]}, {m[i+1]}")
-            message_binaire = str(bin(int(m[i], 16)))[2:] + str(bin(int(m[i + 1], 16)))[2:]
+        print(m)
+        for i in range(2, taille - impair, 2):
+            message_binaire = binaire(16, m[i], m[i + 1])
 
             oct = self.octet()
             octet = (oct + c) % 256
             c = 1 if oct > 255 else 0
 
-            # On fait en sorte que notre keystream tienne sur 8bits
-            octet_binaire = ""
-            for _ in range(8 - len(bin(octet)[2:])):
-                    
-                    octet_binaire += "0"
-            octet_binaire += str(bin(octet)[2:])
+            octet_binaire = binaire(10, octet)
+
             res += xor(message_binaire, octet_binaire)
 
         if impair:
             print("impair")
-            message_binaire = str(bin(int(m[-1], 16)))[2:]
+            message_binaire = binaire(16, m[-1])
             
             octet = self.octet()
             octet = (oct + c) % 256
             c = 1 if oct > 255 else 0
             
-            # On fait en sorte que notre keystream tienne sur 4bits
-            octet_binaire = ""
-            for _ in range(4 - len(bin(octet)[6:])):
-                    octet_binaire += "0"
-            octet_binaire += str(bin(octet)[6:])
+            octet_binaire = binaire(10, octet)[:4]
 
-            message_binaire = str(bin(int(m[-1], 16)))[2:]
             res += xor(message_binaire, octet_binaire)
 
         return hex(int(res, 2))
@@ -116,9 +111,18 @@ def xor(a,b):
 
     return res
 
+def binaire(*args) -> str:
+    """Transforme des chiffres en hexa ou en base 10 en binaire sur 4 bits et les concatènent"""
+    res = ""
+    for elem in args[1:]:
+        tmp = str(bin(int(str(elem), args[0])))[2:]
+        for _ in range((4 if args[0] == 16 else 8 if args[0] == 10 else len(tmp)) - len(tmp)):
+            tmp = "0" + tmp
+        res += tmp
+
+    return res
 
 if __name__ == "__main__":
     m = "0xfffffffffff"
     test_css = CSS([0 for _ in range(40)])
     print(test_css.encryptage(m))
-
