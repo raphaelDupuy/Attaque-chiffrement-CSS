@@ -211,7 +211,6 @@ def attaque(css: CSS):
     # On teste pour toutes les combinaisons de taille 16
     combinaisons = list(itertools.product([0, 1], repeat=16))
     for combi in combinaisons:
-        css.reset()
         s1 = [1]
         for i in combi:
             s1.append(i)
