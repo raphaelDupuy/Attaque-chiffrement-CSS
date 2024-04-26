@@ -1,4 +1,5 @@
 from random import randint
+import itertools
 
 class LFSR:
     """Classe représentant un LFSR
@@ -100,11 +101,22 @@ class CSS:
             x += str(i)
         for j in [i for i in self.lfrs_25.sequence(8)][::-1]:
             y += str(j)
-        print(f"x: {x} - {int(x, 2)}, y: {y} - {int(y, 2)}")
         return int(x, 2) + int(y, 2)
 
     def encryptage(self, m):
-        """Encrypte le message m grâce au Content Scrambling System"""
+        """Encrypte le message m grâce au Content Scrambling System
+        
+        Ex:
+        --
+            css_test = CSS([0 for _ in range(40)])
+            message = "0xffffffffff"
+            chiffre = css_test.encryptage(message)
+            resultat_attendu = "0xffffb66c39"
+            print(f"{(True if (resultat_attendu == chiffre) else False)}")
+            css_test.reset()
+            clair = css_test.encryptage(chiffre)
+            print(f"{(True if message == clair else False)}")
+        """
         res = ""
         c = 0
         taille = len(m)
@@ -149,7 +161,15 @@ class CSS:
         return hex(int(res, 2))
 
 def xor(a,b):
-    """Renvoie l'addition de a et b modulo 2"""
+    """Renvoie le xor bit par bit de a et b en binaire
+    
+    Ex:
+    --
+    a = 1101, b = 0110
+    res = 1 xor 0 | 1 xor 1 | 0 xor 1 | 1 xor 0
+        =    1         0         1         1
+        la fonction renvoie 1011
+    """
     if len(a) != len(b):
         raise IndexError("Tailles différentes")
 
@@ -160,7 +180,14 @@ def xor(a,b):
     return res
 
 def binaire(*args) -> str:
-    """Transforme des chiffres en hexa ou en base 10 en binaire sur 4 bits et les concatènent"""
+    """Transforme des chiffres en hexa ou en base 10 en binaire sur 8 bits et les concatènent
+    
+    Ex:
+    --
+    *args = (10, 155, 49)
+        10 correspond à la base
+        en binaire 12 = 10011011 et 49 = 110001 la fonction renvoie: 1001101100110001
+    """
     res = ""
     for elem in args[1:]:
         tmp = str(bin(int(str(elem), args[0])))[2:]
@@ -170,14 +197,72 @@ def binaire(*args) -> str:
 
     return res
 
+def attaque(css: CSS):
+    css.reset()
+    z = [css.octet() for _ in range(6)]
+    css.reset()
+
+    # On teste pour toutes les combinaisons de taille 16
+    combinaisons = list(itertools.product([0, 1], repeat=16))
+    for combi in combinaisons:
+        css.reset()
+        s1 = [1]
+        for i in combi:
+            s1.append(i)
+
+        # On crée un LFSR de test avec la combinaison actuelle
+        lfsr17_test = LFSR(s1, [(1 if i in {14, 0} else 0) for i in range(17)][::-1])
+
+        y = [0, 0, 0]
+        c = 0
+        # On récupère 24 bits de sortie du lfsr 17 pour les xor avec les Z
+        for i in range(3):
+            sequence_test17 = [str(j) for j in lfsr17_test.sequence(8)][::-1]
+            seq17_b10 = int("".join(sequence_test17), 2)
+            y[i] = (seq17_b10 + z[i] + c) % 256
+            c = 1 if (int("".join(sequence_test17), 2) + z[i] + c) > 255 else 0
+
+        # pour chaque Y ainsi obtenu, on test un nouveau css et on compare les resultats
+        for index in range(3):
+            y[index] = binaire(10, y[index])
+        s2 = []
+
+        for i in y:
+            for j in i:
+                s2.append(int(j))
+
+        s_test = []
+
+        for bit in s1[1:]:
+            s_test.append(int(bit))
+
+        for bit in s2:
+            s_test.append(int(bit))
+
+        css_test_seq = CSS(s_test)
+
+        c = 0
+        comparaison = []
+        for _ in range(6):
+            octet = css_test_seq.octet()
+            oct = (octet + c) % 256
+            c = 1 if (octet + c) > 255 else 0
+            comparaison.append(oct)
+        print(comparaison)
+
+        count = 0
+        for i in range(6):
+            if z[i] == comparaison[i]:
+                count += 1
+
+        if count == 6:
+            return "Trouvé"
+
+
 if __name__ == "__main__":
 
-    m = "0xfffffffffff"
-    test_css = CSS([0 for _ in range(40)])
-    c = test_css.encryptage(m)
-    test_css.reset()
-    m1 = test_css.encryptage(c)
-    print(f"{m} -> {c} -> {m1}")
+    css_test = CSS([0 for _ in range(40)])
+    message = "0xffffffffff"
+    chiffre = css_test.encryptage(message)
+    print(attaque(css_test))
 
-    initialisation = [randint(0, 1) for _ in range(40)]
-    print(f"{len(initialisation)}, {initialisation}")
