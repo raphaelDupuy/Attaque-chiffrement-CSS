@@ -106,7 +106,9 @@ class CSS:
             x += str(i)
         for j in [i for i in self.lfrs_25.sequence(8)][::-1]:
             y += str(j)
-        print(f"x: {x} - {int(x, 2)}, y: {y} - {int(y, 2)}")
+
+        # Print des valeurs en binaire et en décimal
+        # print(f"x: {x} - {int(x, 2)}, y: {y} - {int(y, 2)}")
         return int(x, 2) + int(y, 2)
 
     def encryptage(self, m):
@@ -179,9 +181,9 @@ def binaire(*args) -> str:
     return res
 
 
-def test_lfsr17():
-    # Utilise itertools pour générer toutes les combinaisons possibles pour une taille 17
-    combinaisons = list(itertools.product([0, 1], repeat=17))
+def test_lfsr(taille):
+    # Utilise itertools pour générer toutes les combinaisons possibles pour une taille donnée
+    combinaisons = list(itertools.product([0, 1], repeat=taille))
 
     for combinaison in combinaisons:
         # Si combinaison vaut 0 (= not any), on passe à la prochaine (on ne veut pas montrer que le LFSR fonctionne ou pas avec un vecteur nul, -> 2 (puissance 17) -1 combinaisons possibles)
@@ -189,7 +191,7 @@ def test_lfsr17():
             continue
 
         # On crée un LFSR avec la combinaison actuelle (les coefficients de rétroaction sont inutilisés pour ce test)
-        lfsr = LFSR(list(combinaison), [0]*17)
+        lfsr = LFSR(list(combinaison), [0]*taille)
 
         # Pour que la combinaison soit comparable, on la transforme en liste
         combinaison = list(combinaison)
@@ -201,19 +203,38 @@ def test_lfsr17():
         assert lfsr.get_etat(
         ) == combinaison, f"Echec à la combinaison : {combinaison}"
 
-    print("Tous les tests ont été passés avec succès")
+    print("\nLFSR : Tous les tests ont été passés avec succès\n")
+
+
+def test_CSS(m):
+    # On crée un objet CSS
+    css = CSS([0 for _ in range(40)])
+
+    # On chiffre le message
+    c = css.encryptage(m)
+
+    # On réinitialise le CSS
+    css.reset()
+
+    # On déchiffre le message
+    m1 = css.encryptage(c)
+
+    # On vérifie que le message déchiffré est égal au message initial
+    assert m == m1, f"Echec à la comparaison : {m} != {m1}"
+
+    print(f"\nRésultat du CSS validé: {m} -> {c} -> {m1}\n")
+
 
 
 if __name__ == "__main__":
 
-    test_lfsr17()
+    # On teste un LFSR de taille 17
+    test_lfsr(22)
 
-    m = "0xfffffffffff"
-    test_css = CSS([0 for _ in range(40)])
-    c = test_css.encryptage(m)
-    test_css.reset()
-    m1 = test_css.encryptage(c)
-    print(f"{m} -> {c} -> {m1}")
-
+    # On teste le chiffremennt CSS
+    m = "0xffffffffff"
+    test_CSS(m)
+    
+    # Pas touché à ca
     initialisation = [randint(0, 1) for _ in range(40)]
     print(f"{len(initialisation)}, {initialisation}")
