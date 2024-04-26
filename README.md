@@ -3,5 +3,4 @@ Programme d'attaque contre le chiffrement à flot CSS et réponses à certaines 
 
 
 # Tests
-Utiliser pytest : (pip install -U pytest)
--> dans le terminal, entrer : pytest
+Fonction de test test_lsfr17()
