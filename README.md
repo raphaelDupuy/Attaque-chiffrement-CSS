@@ -11,3 +11,4 @@ Programme d'attaque contre le chiffrement à flot CSS et réponses à certaines 
     Une fonction de test test_CSS(m) permet de tester un chiffrement et un déchiffrement d'un texte avec CSS. Le message doit être entré en argument de la fonction. Son déroulement est lui aussi entièrement commenté et expliqué.\
     Ce test est basé sur une classe CSS, un objet etant initialisé avec une liste de 40 éléments représentants la clé, séparé ensuite en deux pour les deux LSFR de taille 16 et 24.
 3. ### Attaque contre CSS
+    L'attaque ne porte pas ses fruits pourtant la majorité de la fonction a les bons résultats, l'erreur est probablement du à un cafouillage dans l'ordre des bits.
