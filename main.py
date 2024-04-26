@@ -10,12 +10,13 @@ class LFSR:
     coefs_retr (list[{0,1}]): Vecteur contenant les coefficients de rétroaction du LFSR
     """
 
-    def __init__(self, vecteur_init:list, coefs_retr:list) -> None:
+    def __init__(self, vecteur_init: list, coefs_retr: list) -> None:
         """Méthode d'initialisation de la classe LFSR"""
 
         if len(vecteur_init) != len(coefs_retr):
-            raise IndexError("Tailles du VI et des coefficients de rétroaction incompatibles")
-        
+            raise IndexError(
+                "Tailles du VI et des coefficients de rétroaction incompatibles")
+
         self.sauvegarde = vecteur_init
         self.coefs = coefs_retr
         self.etat = vecteur_init
@@ -24,24 +25,24 @@ class LFSR:
         """Remplace l'état actuel du LFSR par un nouvel état"""
         self.etat = nouvel_etat
 
-    def get_etat(self, index=None) -> list|int:
+    def get_etat(self, index=None) -> list | int:
         """Retourne l'état entier du LFSR ou seulement le bit à l'index indiqué"""
         if not index == None:
             return self.etat[index]
         else:
             return self.etat
-    
-    def get_coefs(self, index=None) -> list|int:
+
+    def get_coefs(self, index=None) -> list | int:
         """Retourne les coeficientss de rétroaction entiers du lfsr ou seulement le bit à l'index indiqué"""
         if not index == None:
-            return self.coefs[index]        
+            return self.coefs[index]
         else:
             return self.coefs
-    
+
     def get_taille(self):
         """Retourne la taille du LFSR"""
         return len(self.get_etat())
-    
+
     def reset(self):
         """Redémarre le LFSR avec son vecteur d'initialisation"""
         self.etat = self.sauvegarde
@@ -56,13 +57,15 @@ class LFSR:
             yield last
 
             # On fait la somme des produits des états[i] et des coefs[i] du LFSR le tout modulo 2
-            last = sum([self.get_coefs(i) * self.get_etat(i) for i in range(self.get_taille())])
+            last = sum([self.get_coefs(i) * self.get_etat(i)
+                       for i in range(self.get_taille())])
             last = last % 2
 
             # On décale l'état précédent vers la droite et on ajoute le nouveau bit de poids fort
             new_list = self.get_etat()[:-1]
             new_list.insert(0, last)
             self.set_etat(new_list)
+
 
 class CSS:
     """Classe représentant l'encryptage CSS
@@ -77,10 +80,11 @@ class CSS:
 
         if len(s) != 40:
             raise ValueError("Valeur fournie de mauvaise taille")
-        
+
         # On sépare s en deux morceaux s1 et s2 de tailles 16 et 24
-        s1, s2 = str("".join(str(i) for i in s[0:16])), str("".join(str(i) for i in s[16:40]))
-        
+        s1, s2 = str("".join(str(i) for i in s[0:16])), str(
+            "".join(str(i) for i in s[16:40]))
+
         # On initialise les vecteurs des LFSR
         vec_17 = [(1 if i in {14, 0} else 0) for i in range(17)][::-1]
         vec_25 = [(1 if i in {12, 4, 3, 0} else 0) for i in range(25)][::-1]
@@ -146,12 +150,12 @@ class CSS:
 
             # On récupère le dernier nibble seul
             message_binaire = binaire(16, m[-1])
-            
+
             # On récupère l'octet de clé
             octet = self.octet()
             octet = (oct + c) % 256
             c = 1 if oct > 255 else 0
-            
+
             # On ne garde que les 4 premiers bits de l'octet de clé
             octet_binaire = binaire(10, octet)[:4]
 
@@ -178,6 +182,7 @@ def xor(a,b):
         res += str((int(a[i]) + int(b[i])) % 2)
 
     return res
+
 
 def binaire(*args) -> str:
     """Transforme des chiffres en hexa ou en base 10 en binaire sur 8 bits et les concatènent
@@ -258,11 +263,60 @@ def attaque(css: CSS):
         if count == 6:
             return "Trouvé"
 
+def test_lfsr(taille):
+    # Utilise itertools pour générer toutes les combinaisons possibles pour une taille donnée
+    combinaisons = list(itertools.product([0, 1], repeat=taille))
+
+    for combinaison in combinaisons:
+        # Si combinaison vaut 0 (= not any), on passe à la prochaine (on ne veut pas montrer que le LFSR fonctionne ou pas avec un vecteur nul, -> 2 (puissance 17) -1 combinaisons possibles)
+        if not any(combinaison):
+            continue
+
+        # On crée un LFSR avec la combinaison actuelle (les coefficients de rétroaction sont inutilisés pour ce test)
+        lfsr = LFSR(list(combinaison), [0]*taille)
+
+        # Pour que la combinaison soit comparable, on la transforme en liste
+        combinaison = list(combinaison)
+
+        # Vérification que les tests sont corrects (en ajoutant volontairement une erreur)
+        # -> combinaison.append(1)
+
+        # On vérifie que la séquence générée par le LFSR est égale à la combinaison précedemment générée
+        assert lfsr.get_etat(
+        ) == combinaison, f"Echec à la combinaison : {combinaison}"
+
+    print("\nLFSR : Tous les tests ont été passés avec succès\n")
+
+
+def test_CSS(m):
+    # On crée un objet CSS
+    css = CSS([0 for _ in range(40)])
+
+    # On chiffre le message
+    c = css.encryptage(m)
+
+    # On réinitialise le CSS
+    css.reset()
+
+    # On déchiffre le message
+    m1 = css.encryptage(c)
+
+    # On vérifie que le message déchiffré est égal au message initial
+    assert m == m1, f"Echec à la comparaison : {m} != {m1}"
+
+    print(f"\nRésultat du CSS validé: {m} -> {c} -> {m1}\n")
+
+
 
 if __name__ == "__main__":
 
-    css_test = CSS([0 for _ in range(40)])
-    message = "0xffffffffff"
-    chiffre = css_test.encryptage(message)
-    print(attaque(css_test))
+    # On teste un LFSR de taille 17
+    test_lfsr(22)
 
+    # On teste le chiffremennt CSS
+    m = "0xffffffffff"
+    test_CSS(m)
+    
+    # Pas touché à ca
+    initialisation = [randint(0, 1) for _ in range(40)]
+    print(f"{len(initialisation)}, {initialisation}")
