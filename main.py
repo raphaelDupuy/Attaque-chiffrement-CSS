@@ -203,6 +203,7 @@ def binaire(*args) -> str:
     return res
 
 def attaque(css: CSS):
+    # On récupère les 6 premiers octets du CSS
     css.reset()
     z = [css.octet() for _ in range(6)]
     css.reset()
