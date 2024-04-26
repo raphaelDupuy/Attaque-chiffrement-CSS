@@ -1,6 +1,7 @@
 from random import randint
 import itertools
 
+#   QUESTION 1/2 LFSR
 class LFSR:
     """Classe représentant un LFSR
 
@@ -107,6 +108,7 @@ class CSS:
             y += str(j)
         return int(x, 2) + int(y, 2)
 
+    #   QUESTION 3 ENCRYPTAGE
     def encryptage(self, m):
         """Encrypte le message m grâce au Content Scrambling System
         
@@ -202,6 +204,8 @@ def binaire(*args) -> str:
 
     return res
 
+
+#   QUESTION 5 ATTAQUE
 def attaque(css: CSS):
     # On récupère les 6 premiers octets du CSS
     css.reset()
@@ -263,6 +267,7 @@ def attaque(css: CSS):
         if count == 6:
             return "Trouvé"
 
+#   QUESTION 1 TESTS LFSR
 def test_lfsr(taille):
     # Utilise itertools pour générer toutes les combinaisons possibles pour une taille donnée
     combinaisons = list(itertools.product([0, 1], repeat=taille))
@@ -316,7 +321,3 @@ if __name__ == "__main__":
     # On teste le chiffremennt CSS
     m = "0xffffffffff"
     test_CSS(m)
-    
-    # Pas touché à ca
-    initialisation = [randint(0, 1) for _ in range(40)]
-    print(f"{len(initialisation)}, {initialisation}")
